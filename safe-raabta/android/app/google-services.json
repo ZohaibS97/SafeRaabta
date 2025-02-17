@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "184912752500",
+    "project_id": "saferaabta-138fd",
+    "storage_bucket": "saferaabta-138fd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:184912752500:android:503271e4db3caf9f128621",
+        "android_client_info": {
+          "package_name": "com.saferaabta.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKQL-Vuwkv34vKp6L_i0NXL1tS5A1TC70"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -104,3 +104,189 @@ const styles = StyleSheet.create({
 });
 
 export default LoginScreen;
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  TouchableWithoutFeedback,
+  Keyboard
+} from "react-native";
+import { useRouter } from "expo-router";
+import { auth, db } from "../firebaseConfig"; // Adjusted import path
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { setDoc, doc } from "firebase/firestore";
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from "react-native-reanimated";
+
+export default function LoginScreen() {
+  const router = useRouter();
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [phone, setPhone] = useState("");
+
+  // Animation Values
+  const rotateY = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ rotateY: `${rotateY.value}deg` }],
+  }));
+
+  const textFixStyle = useAnimatedStyle(() => ({
+    transform: [{ scaleX: rotateY.value === 180 ? -1 : 1 }], // Flip text back
+  }));
+
+  // Toggle Animation
+  const toggleForm = () => {
+    rotateY.value = withTiming(isRegistering ? 0 : 180, { duration: 500 });
+    setIsRegistering(!isRegistering);
+  };
+
+  // **Login Function**
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Please enter both email and password.");
+      return;
+    }
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      router.replace("/home"); // Redirect to home
+    } catch (error: any) {
+      Alert.alert("Login Failed", error.message);
+    }
+  };
+
+  // **Register Function**
+  const handleRegister = async () => {
+    if (!email || !password || !username || !phone) {
+      Alert.alert("Error", "All fields are required.");
+      return;
+    }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await setDoc(doc(db, "users", userCredential.user.uid), {
+        username,
+        email,
+        phone,
+      });
+
+      router.replace("/home"); // Redirect to home
+    } catch (error: any) {
+      Alert.alert("Registration Failed", error.message);
+    }
+  };
+
+  return (
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"} 
+      style={styles.container}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <Animated.View style={[styles.card, animatedStyle]}>
+            {!isRegistering ? (
+              <Animated.View style={[styles.innerCard, textFixStyle]}>
+                <Text style={styles.title}>Welcome {"\n"} to SafeRaabta</Text>
+
+                <Text style={styles.label}>Email</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your email"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                />
+
+                <Text style={styles.label}>Password</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                />
+
+                <TouchableOpacity style={styles.button} onPress={handleLogin}>
+                  <Text style={styles.buttonText}>Login</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.switchButton} onPress={toggleForm}>
+                  <Text style={styles.switchButtonText}>Don't have an account? Register!</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            ) : (
+              <Animated.View style={[styles.innerCard, textFixStyle]}>
+                <Text style={styles.title}>Safe Raabta</Text>
+
+                <Text style={styles.label}>Email</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your email"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                />
+
+                <Text style={styles.label}>Phone Number</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="+44741234567"
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
+                />
+
+                <Text style={styles.label}>Username</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Choose a username"
+                  value={username}
+                  onChangeText={setUsername}
+                />
+
+                <Text style={styles.label}>Password</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                />
+
+                <TouchableOpacity style={styles.button} onPress={handleRegister}>
+                  <Text style={styles.buttonText}>Register</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.switchButton} onPress={toggleForm}>
+                  <Text style={styles.switchButtonText}>Already have an account? Login!</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            )}
+          </Animated.View>
+        </ScrollView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
+  );
+}
+
+// Styles
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#2B4D66",
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
